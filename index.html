@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Print Orientation Optimizer</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M6 26h20M9 22h14M12 18h8M14 6l2-2 2 2v10h-4z' stroke='%23ff7a1a' stroke-width='2.4' fill='none' stroke-linecap='round'/></svg>" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="panel">
+        <header class="brand">
+          <h1>Print Orientation Optimizer</h1>
+          <p>Import a part, mark where forces act, and find the strongest way to print it.</p>
+        </header>
+
+        <section class="card">
+          <h2><span class="step">1</span> Import part</h2>
+          <label class="dropzone" id="dropzone">
+            <input type="file" id="file-input" accept=".stl,.3mf" hidden />
+            <strong>Drop an .stl or .3mf file</strong>
+            <span>or click to browse</span>
+          </label>
+          <button class="link" id="sample-btn" type="button">…or try a sample L-bracket</button>
+          <div class="model-info" id="model-info" hidden></div>
+        </section>
+
+        <section class="card" id="loads-card" data-disabled="true">
+          <h2><span class="step">2</span> Mark forces &amp; fixtures</h2>
+          <div class="segmented" role="group" aria-label="Click mode">
+            <button type="button" data-mode="orbit" class="active">Rotate view</button>
+            <button type="button" data-mode="load">+ Force</button>
+            <button type="button" data-mode="fixture">+ Fixture</button>
+          </div>
+          <p class="hint" id="mode-hint">Drag to orbit, scroll to zoom. Choose <b>+ Force</b> and click the part where a load acts.</p>
+          <div id="load-list" class="item-list"></div>
+          <div id="fixture-list" class="item-list"></div>
+        </section>
+
+        <section class="card" id="settings-card" data-disabled="true">
+          <h2><span class="step">3</span> Priorities</h2>
+          <div class="slider-row"><label for="w-strength">Strength under load</label><input type="range" id="w-strength" min="0" max="1" step="0.05" /><output></output></div>
+          <div class="slider-row"><label for="w-support">Less support material</label><input type="range" id="w-support" min="0" max="1" step="0.05" /><output></output></div>
+          <div class="slider-row"><label for="w-height">Faster (lower height)</label><input type="range" id="w-height" min="0" max="1" step="0.05" /><output></output></div>
+          <div class="slider-row"><label for="w-adhesion">Bed adhesion</label><input type="range" id="w-adhesion" min="0" max="1" step="0.05" /><output></output></div>
+          <details>
+            <summary>Material &amp; printer</summary>
+            <div class="field-row"><label for="overhang">Max overhang without support</label><span><input type="number" id="overhang" min="10" max="80" step="1" /> °</span></div>
+            <div class="field-row"><label for="layer-ratio">Layer bond strength (Z ÷ XY)</label><span><input type="number" id="layer-ratio" min="0.1" max="1" step="0.05" /></span></div>
+            <p class="hint">Typical: PLA 0.5–0.7, PETG 0.6–0.8, ABS/ASA 0.4–0.6, CF-filled 0.3–0.5.</p>
+          </details>
+          <button class="primary" id="optimize-btn" type="button">Find best orientation</button>
+          <div class="progress" id="progress" hidden><div></div></div>
+        </section>
+
+        <section class="card" id="results-card" hidden>
+          <h2><span class="step">4</span> Recommended orientations</h2>
+          <div id="results"></div>
+          <div class="result-actions">
+            <button type="button" id="original-btn">Show original</button>
+            <button type="button" id="export-btn">Download oriented STL</button>
+          </div>
+          <label class="check"><input type="checkbox" id="show-overhang" checked /> Highlight support (red) &amp; bed contact (green)</label>
+        </section>
+      </aside>
+
+      <main class="stage" id="stage">
+        <div class="empty" id="empty-state">
+          <div>
+            <h2>No part loaded</h2>
+            <p>Import an STL or 3MF file to begin.</p>
+          </div>
+        </div>
+        <div class="toast" id="toast" hidden></div>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
