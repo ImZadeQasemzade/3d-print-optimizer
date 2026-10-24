@@ -22,7 +22,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 button, input, select { font: inherit; color: inherit; }
 [hidden] { display: none !important; }
 
-.app { display: grid; grid-template-columns: 380px 1fr; height: 100vh; }
+.app { display: grid; grid-template-columns: 380px 1fr; height: 100%; }
 
 .panel {
   background: var(--panel);

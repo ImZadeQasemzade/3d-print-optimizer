@@ -35,6 +35,10 @@ Other scripts:
 
 `dist/` is fully static, with relative paths, so it can be hosted anywhere (GitHub Pages, Netlify, a USB stick).
 
+## Example files
+
+`examples/` contains a 120 × 12 × 12 mm cantilever bar as both `cantilever-bar.stl` and `cantilever-bar.3mf`. Load it, put a force on the top face at one end and a fixture at the other end. The app should recommend printing it lying flat (strength ≈ 97 %, no supports), never standing upright.
+
 ## How to use it
 
 1. **Import** your `.stl` / `.3mf` file. Units are assumed to be millimetres.

@@ -1,7 +1,7 @@
 import './styles.css';
 import * as THREE from 'three';
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
-import { classifyFaces, prepareMesh, type PreparedMesh } from './analysis/optimizer';
+import { classifyFaces, optimize, prepareMesh, type PreparedMesh } from './analysis/optimizer';
 import { DEFAULT_SETTINGS, type Candidate, type Fixture, type Load, type OptimizerSettings } from './analysis/types';
 import { normalize, scale, type Vec3 } from './analysis/vec';
 import type { WorkerRequest, WorkerResponse } from './analysis/worker';
@@ -328,7 +328,6 @@ let worker: Worker | null = null;
 function runOptimizer() {
   if (!state.positions) return;
   worker?.terminate();
-  worker = new Worker(new URL('./analysis/worker.ts', import.meta.url), { type: 'module' });
   const btn = $<HTMLButtonElement>('optimize-btn');
   const progress = $('progress');
   const bar = progress.firstElementChild as HTMLElement;
@@ -337,8 +336,7 @@ function runOptimizer() {
   progress.hidden = false;
   bar.style.width = '0%';
 
-  worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
-    const msg = e.data;
+  const handle = (msg: WorkerResponse) => {
     if (msg.type === 'progress') {
       bar.style.width = `${Math.round(msg.fraction * 100)}%`;
       return;
@@ -366,6 +364,29 @@ function runOptimizer() {
     loads: state.loads.map(({ id, point, normal, direction, magnitude }) => ({ id, point, normal, direction, magnitude })),
     fixtures: state.fixtures,
     settings: state.settings,
+  };
+  // Fallback when the page may not start workers (e.g. a sandboxed host): run on the main thread.
+  const runInline = () =>
+    setTimeout(() => {
+      try {
+        handle({ type: 'done', result: optimize(request.positions, request.loads, request.fixtures, request.settings) });
+      } catch (err) {
+        handle({ type: 'error', message: err instanceof Error ? err.message : String(err) });
+      }
+    }, 30);
+
+  try {
+    worker = new Worker(new URL('./analysis/worker.ts', import.meta.url), { type: 'module' });
+  } catch {
+    runInline();
+    return;
+  }
+  worker.onmessage = (e: MessageEvent<WorkerResponse>) => handle(e.data);
+  worker.onerror = (e) => {
+    e.preventDefault();
+    worker?.terminate();
+    worker = null;
+    runInline();
   };
   worker.postMessage(request);
 }
